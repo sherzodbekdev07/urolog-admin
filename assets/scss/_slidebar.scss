@@ -1,0 +1,62 @@
+.sidebar {
+    width: 250px;
+    background: #0f766e;
+    color: #fff;
+    padding: 20px;
+    transition: width 0.3s ease;
+
+    &.collapsed {
+        width: 90px;
+
+        ul li {
+            text-align: center;
+            font-size: 0; // matnni yo‘qotamiz
+        }
+
+        ul li::before {
+            font-size: 16px; // ikonka qoladi
+        }
+    }
+
+    .logo {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+
+        .toggle {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    }
+
+    ul {
+        list-style: none;
+        padding: 0;
+
+        li {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            gap: 5px;
+            img{
+                width: 24px;
+                height: 24px;
+            }
+            &:hover {
+                background: rgba(255, 255, 255, 0.2);
+            }
+
+            &.active {
+                background: rgba(255, 255, 255, 0.35);
+                font-weight: 600;
+            }
+        }
+    }
+}
