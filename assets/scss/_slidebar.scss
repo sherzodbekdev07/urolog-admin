@@ -1,62 +1,159 @@
+:root {
+    --sidebar-w: 280px;
+    --sidebar-w-collapsed: 88px;
+}
+
+$bg-1: #0d1b2a;
+$bg-2: #0b2238;
+$bg-3: #0a2d4e;
+$glass: rgba(255, 255, 255, 0.06);
+$border: rgba(255, 255, 255, 0.12);
+
+$brand-1: #2f7af8;
+$brand-2: #4fd1ff;
+$brand-3: #8ec5ff;
+
+$text-1: #eaf2ff;
+$text-2: #c9d7ff;
+$muted: #9bb1d4;
+
+$shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+$radius-xl: 20px;
+$radius-lg: 14px;
+$ease: cubic-bezier(.22, .61, .36, 1);
+$ease-soft: cubic-bezier(.2, .8, .2, 1);
+$ring: 0 0 0 2px rgba(79, 209, 255, .25), 0 10px 30px rgba(47, 122, 248, .25);
+
 .sidebar {
-    width: 250px;
-    background: #0f766e;
-    color: #fff;
-    padding: 20px;
-    transition: width 0.3s ease;
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    width: var(--sidebar-w);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+    background: linear-gradient(180deg, $bg-2, $bg-1);
+    color: $text-1;
+    border-right: 1px solid $border;
+    box-shadow: $shadow;
+    transition: width .46s $ease, padding .46s $ease;
+    overflow: hidden;
 
     &.collapsed {
-        width: 90px;
+        width: var(--sidebar-w-collapsed);
+        padding: 16px 12px;
 
-        ul li {
-            text-align: center;
-            font-size: 0; // matnni yo‘qotamiz
+        .logo h2 {
+            display: none;
         }
 
-        ul li::before {
-            font-size: 16px; // ikonka qoladi
-        }
+        // DAD yozuv yo‘q bo‘ladi
     }
 
     .logo {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 14px;
+        border-radius: $radius-xl;
+        background: linear-gradient(135deg, rgba(79, 209, 255, .1), rgba(47, 122, 248, .08));
+        border: 1px solid rgba(142, 197, 255, .18);
+        box-shadow: $ring;
 
-        .toggle {
-            background: none;
+        h2 {
+            font-weight: 800;
+            letter-spacing: 1px;
+            font-size: 22px;
+            background: linear-gradient(90deg, $brand-2, $brand-3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-transform: uppercase;
+        }
+
+        .collapse-btn {
             border: none;
-            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            background: radial-gradient(120% 140% at 30% 20%, rgba(79, 209, 255, .25), rgba(47, 122, 248, .15));
+            color: $text-1;
+            font-weight: 700;
             cursor: pointer;
-            font-size: 14px;
+            border: 1px solid rgba(142, 197, 255, .2);
+            transition: transform .25s $ease-soft, box-shadow .3s $ease-soft;
+
+            &:hover {
+                transform: scale(1.05);
+                box-shadow: $ring;
+            }
+
+            &:active {
+                transform: scale(.95);
+            }
         }
     }
 
-    ul {
-        list-style: none;
-        padding: 0;
+    .menu {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px;
+        margin-top: 6px;
+        overflow-y: auto;
 
-        li {
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: background 0.3s;
-            display: flex;
-            gap: 5px;
-            img{
+        .menu-item {
+            display: grid;
+            grid-template-columns: 28px 1fr;
+            align-items: center;
+            gap: 12px;
+            color: $text-2;
+            font-weight: 600;
+            padding: 12px 14px;
+            border-radius: $radius-lg;
+            text-decoration: none;
+            transition: .3s $ease;
+
+            .icon {
                 width: 24px;
                 height: 24px;
+                filter: drop-shadow(0 2px 6px rgba(47, 122, 248, .28));
+                filter: brightness(0) invert(1)
             }
+
+            span {
+                transition: opacity .25s $ease;
+            }
+
             &:hover {
-                background: rgba(255, 255, 255, 0.2);
+                color: $text-1;
+                background: rgba(79, 209, 255, .1);
+
+                .icon {
+                    transform: scale(1.05);
+                }
             }
 
             &.active {
-                background: rgba(255, 255, 255, 0.35);
-                font-weight: 600;
+                background: linear-gradient(135deg, rgba(79, 209, 255, .22), rgba(47, 122, 248, .18));
+                color: $text-1;
             }
+        }
+    }
+
+    &.collapsed {
+        .menu-item {
+            grid-template-columns: 1fr;
+            justify-items: center;
+            padding: 12px 10px;
+
+            span {
+                display: none;
+            }
+
+            // label yashiriladi
         }
     }
 }

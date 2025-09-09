@@ -1,61 +1,497 @@
-.sidebar {
-    width: 240px;
-    background: white;
+.dashboard-container {
     padding: 20px;
-    border-right: 1px solid #e5e7eb;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     min-height: 100vh;
+    width: 100%;
+}
 
-    h1 {
-        font-size: 1.4rem;
-        font-weight: bold;
-        margin-bottom: 1.5rem;
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(10px);
+}
+
+.header h1 {
+    color: #2d3748;
+    margin: 0;
+    font-size: 32px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #4361ee, #7209b7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.time-filter {
+    display: flex;
+    gap: 8px;
+    background: #f8fafc;
+    padding: 6px;
+    border-radius: 12px;
+}
+
+.filter-btn {
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, #4361ee, #7209b7);
+    color: white;
+    box-shadow: 0 2px 10px rgba(67, 97, 238, 0.3);
+    transform: translateY(-1px);
+}
+
+.filter-btn:hover:not(.active) {
+    background: #e2e8f0;
+    color: #4361ee;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-info span {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4361ee, #7209b7);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+}
+
+.loading,
+.loading-small {
+    text-align: center;
+    padding: 30px;
+}
+
+.loading-small {
+    padding: 20px;
+}
+
+.spinner,
+.spinner-small {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #4361ee;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+.spinner-small {
+    width: 20px;
+    height: 20px;
+    border-width: 2px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
     }
 
-    nav {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-
-        a {
-            padding: 10px 12px;
-            border-radius: 8px;
-            color: $secondary;
-            font-weight: 500;
-
-            &:hover {
-                background: $primary;
-                color: white;
-            }
-        }
+    100% {
+        transform: rotate(360deg);
     }
 }
 
-.main {
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-bottom: 35px;
+}
+
+.stat-card {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stat-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.stat-header h3 {
+    margin: 0;
+    color: #64748b;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+}
+
+.stat-icon.patients {
+    background: linear-gradient(135deg, #4361ee, #7209b7);
+}
+
+.stat-icon.success {
+    background: linear-gradient(135deg, #06d6a0, #00b894);
+}
+
+.stat-icon.warning {
+    background: linear-gradient(135deg, #ffd60a, #fdcb6e);
+}
+
+.stat-icon.danger {
+    background: linear-gradient(135deg, #f72585, #e84393);
+}
+
+.stat-value {
+    font-size: 36px;
+    font-weight: 800;
+    color: #2d3748;
+    margin-bottom: 8px;
+    line-height: 1;
+}
+
+.stat-desc {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.charts-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-bottom: 35px;
+}
+
+.chart-card {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.chart-card h3 {
+    margin: 0 0 25px 0;
+    color: #2d3748;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.chart {
+    height: 350px;
+}
+
+.doctors-section,
+.activities-section {
+    margin-bottom: 35px;
+}
+
+.doctors-section h2 {
+    color: #2d3748;
+    margin-bottom: 25px;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.doctors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
+}
+
+.doctor-card {
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.doctor-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.doctor-card.active {
+    border-color: #4361ee;
+    background: linear-gradient(135deg, #f8faff, #fff);
+    box-shadow: 0 8px 30px rgba(67, 97, 238, 0.15);
+}
+
+.doctor-info h4 {
+    margin: 0 0 8px 0;
+    color: #2d3748;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.doctor-info p {
+    margin: 0 0 15px 0;
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.experience {
+    background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+    color: #4338ca;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.doctor-stats {
+    margin-top: 20px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 20px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.stat-row span {
+    color: #64748b;
+    font-weight: 500;
+}
+
+.stat-row strong {
+    color: #2d3748;
+    font-weight: 700;
+}
+
+.activities-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+
+.popular-times,
+.leads-funnel {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.popular-times h3,
+.leads-funnel h3 {
+    margin: 0 0 25px 0;
+    color: #2d3748;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.selected-doctor {
+    color: #4361ee;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.time-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.time-slot {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 10px 0;
+}
+
+.time {
+    font-weight: 700;
+    min-width: 70px;
+    color: #2d3748;
+    font-size: 14px;
+}
+
+.count-bar {
     flex: 1;
-    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 8px 12px;
+}
 
-    header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
+.bar-fill {
+    height: 12px;
+    background: linear-gradient(135deg, #4361ee, #7209b7);
+    border-radius: 6px;
+    transition: all 0.5s ease;
+    min-width: 2px;
+}
 
-        h2 {
-            font-size: 1.8rem;
-            font-weight: 600;
-        }
+.count {
+    font-weight: 700;
+    color: #4361ee;
+    font-size: 14px;
+    min-width: 30px;
+    text-align: right;
+}
 
-        button {
-            background: $primary;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
+.funnel-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
 
-            &:hover {
-                background: darken($primary, 10%);
-            }
-        }
+.funnel-step {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 20px;
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    border-radius: 12px;
+    border-left: 4px solid #4361ee;
+    transition: all 0.3s ease;
+}
+
+.funnel-step:hover {
+    transform: translateX(5px);
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+}
+
+.funnel-step span {
+    color: #64748b;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.funnel-step strong {
+    color: #2d3748;
+    font-weight: 800;
+    font-size: 18px;
+}
+
+.no-data {
+    text-align: center;
+    padding: 40px 20px;
+    color: #64748b;
+}
+
+.no-data p {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+@media (max-width: 1200px) {
+    .charts-container {
+        grid-template-columns: 1fr;
+    }
+
+    .activities-section {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 15px;
+    }
+
+    .header {
+        flex-direction: column;
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .header h1 {
+        font-size: 24px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .doctors-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .time-filter {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .filter-btn {
+        flex: 1;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .stat-value {
+        font-size: 28px;
+    }
+
+    .chart {
+        height: 250px;
+    }
+
+    .time-slot {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .count-bar {
+        width: 100%;
     }
 }

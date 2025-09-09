@@ -11,15 +11,25 @@
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.13",
+    "@vueuse/core": "^13.9.0",
     "autoprefixer": "^10.4.21",
+    "chart.js": "^4.5.0",
+    "echarts": "^6.0.0",
     "lucide-vue-next": "^0.542.0",
     "nuxt": "^3.19.1",
     "postcss": "^8.5.6",
+    "recharts": "^3.1.2",
     "sass": "^1.92.1",
     "sass-loader": "^16.0.5",
     "tailwindcss": "^4.1.13",
     "vue": "^3.5.20",
+    "vue-chartjs": "^5.3.2",
+    "vue-echarts": "^7.0.3",
     "vue-router": "^4.5.1",
-    "vue3-apexcharts": "^1.8.0"
+    "vue3-apexcharts": "^1.8.0",
+    "vuedraggable": "4.1.0"
+  },
+  "devDependencies": {
+    "vite-svg-loader": "^5.1.0"
   }
 }

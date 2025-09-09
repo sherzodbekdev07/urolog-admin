@@ -1,44 +1,87 @@
 <template>
-    <aside :class="['sidebar', { collapsed: isCollapsed }]">
+    <div class="sidebar" :class="{ collapsed: isCollapsed }">
+        <!-- Logo -->
         <div class="logo">
-            <span>DAD</span>
-            <button class="toggle" @click="isCollapsed = !isCollapsed">
-                {{ isCollapsed ? '➡' : '⬅' }}
+            <h2>DAD</h2>
+            <button class="collapse-btn" @click="isCollapsed = !isCollapsed">
+                {{ isCollapsed ? "»" : "«" }}
             </button>
         </div>
 
-        <ul>
-            <li :class="{ active: activeMenu === 'dashboard' }" class="" @click="setActive('dashboard')">
-                <img src="../assets/images/svg/dashbroad.svg" alt="">
-                Dashboard
-            </li>
-            <li :class="{ active: activeMenu === 'home' }" @click="setActive('home')">
-                <img src="../assets/images/svg/main.svg" alt="">
-                Bosh sahifa
-            </li>
-            <li :class="{ active: activeMenu === 'patients' }" @click="setActive('patients')">
-                <img src="../assets/images/svg/309042_group_users_people_icon.svg" alt="">
-                Bemorlar
-            </li>
-            <li :class="{ active: activeMenu === 'appointments' }" @click="setActive('appointments')">
-                <img src="../assets/images/svg/calendar.svg" alt="">
-                Qabulga yozilganlar
-            </li>
-            <li :class="{ active: activeMenu === 'goals' }" @click="setActive('goals')">
-                <img src="../assets/images/svg/circle.svg" alt="">
-                Maqsadli bemorlar
-            </li>
-        </ul>
-    </aside>
+        <!-- Menu -->
+        <nav class="menu" @transitionend="$emit('transition-end', $event)">
+            <NuxtLink v-for="item in menuItems" :key="item.path" :to="item.path" class="menu-item"
+                :class="{ active: route.fullPath === item.path }">
+                <img :src="item.icon" class="icon" />
+                <span v-if="showLabels">{{ item.label }}</span>
+            </NuxtLink>
+        </nav>
+
+        <!-- Collapse button -->
+    </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { useRoute } from "vue-router";
+import { ref } from "vue";
 
+import HomeIcon from "@/assets/images/svg/dashboard.svg?url"
+import DoctorIcon from "@/assets/images/svg/309042_group_users_people_icon.svg?url"
+import CalendarIcon from "@/assets/images/svg/calendar.svg?url"
+import TargetIcon from "@/assets/images/svg/circle.svg?url"
+
+const menuItems = [
+    { path: "/", label: "Dashboard", icon: HomeIcon },
+    { path: "/patients", label: "Bemorlar", icon: DoctorIcon },
+    { path: "/appointments", label: "Qabul", icon: CalendarIcon },
+    { path: "/goals", label: "Maqsadlar", icon: TargetIcon },
+];
+import { useEventBus } from "@vueuse/core"
+
+// reactive collapsed state for sidebar
 const isCollapsed = ref(false)
-const activeMenu = ref('dashboard')
+// showLabels becomes true only after expand transition completes to avoid partial text visibility
+const showLabels = ref(true)
 
-function setActive(menu) {
-    activeMenu.value = menu
+// route for active link checks
+const route = useRoute()
+
+import { onMounted, ref as vueRef } from 'vue'
+
+// menuRef used to listen for transitionend
+const menuRef = vueRef(null)
+
+const bus = useEventBus("sidebar")
+
+const onTransitionEnd = (e) => {
+    if (e.propertyName !== "width") return
+
+    if (!isCollapsed.value) {
+        showLabels.value = true
+    }
+
+    // ✅ Chartlarga signal yuboramiz
+    bus.emit()
 }
+
+// toggle handler to hide labels immediately when collapsing
+const toggleCollapsed = () => {
+    if (isCollapsed.value) {
+        // currently collapsed -> expanding
+        isCollapsed.value = false
+        // don't show labels until transitionend
+        showLabels.value = false
+    } else {
+        // currently expanded -> collapsing
+        // hide labels immediately
+        showLabels.value = false
+        isCollapsed.value = true
+    }
+}
+// ensure initial state
+onMounted(() => {
+    // if starting expanded, show labels
+    showLabels.value = !isCollapsed.value
+})
+
 </script>

@@ -1,32 +1,26 @@
 <template>
-    <div class="flex">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <h1>Doctor Admin</h1>
-            <nav>
-                <NuxtLink to="/">Dashboard</NuxtLink>
-                <NuxtLink to="/appointments">Appointments</NuxtLink>
-                <NuxtLink to="/patients">Patients</NuxtLink>
-                <NuxtLink to="/analytics">Analytics</NuxtLink>
-                <NuxtLink to="/notifications">Notifications</NuxtLink>
-            </nav>
-        </aside>
-
-        <!-- Main -->
-        <div class="main">
-            <header>
-                <h2>Admin Panel</h2>
-                <button>+ New</button>
-            </header>
-            <main>
-                <slot />
-            </main>
-        </div>
-    </div>
+  <div class="layout">
+    <Sidebar />
+    <main class="content">
+      <slot />
+    </main>
+  </div>
 </template>
 
+<script setup>
+import Sidebar from "~/components/Sidebar.vue";
+</script>
+
 <style scoped lang="scss">
-.flex {
-    display: flex;
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  height: 100vh;
+}
+
+.content {
+  padding: 20px;
+  overflow-y: auto;
+  background: #f8f9fa
 }
 </style>
