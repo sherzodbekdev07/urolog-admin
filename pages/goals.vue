@@ -1,213 +1,197 @@
 <template>
-  <div class="flex justify-center">
+  <!-- Template qismi o'zgarishsiz -->
+  <div class="kanban-container">
     <div
-      ref="container"
-      class="min-h-[400px] transition-all duration-300 ease-linear w-full flex overflow-x-auto p-4"
+      v-for="column in columns"
+      :key="column.id"
+      class="kanban-column"
+      @dragover.prevent="onDragOver($event, column.id)"
+      @drop.prevent="onDrop($event, column.id)"
+      @dragleave="onDragLeave($event)"
     >
-      <!-- Ustunlar -->
+      <h3>{{ column.title }}</h3>
       <div
-        v-for="(column, i) in columns"
-        :key="column.title"
-        :data-column-index="i"
-        class="border bg-gray-50 flex flex-col border-gray-200 shadow-sm dark:border-[#48484a] dark:bg-[#2c2c2e] rounded-xl px-3 py-3 column-width mr-4 last:mr-0"
+        v-for="item in getItemsByColumn(column.apiStatus)"
+        :key="item.id"
+        class="kanban-card"
+        draggable="true"
+        @dragstart="onDragStart($event, item)"
+        @dragend="onDragEnd"
       >
-        <!-- Ustun nomi -->
-        <p
-          class="text-gray-700 dark:text-neutral-300 font-semibold font-sans tracking-wide text-sm text-center"
-        >
-          {{ column.title }}
-        </p>
-
-        <!-- Drag and Drop -->
-        <draggable
-          @change="draggTask"
-          @start="startAutoScroll"
-          @end="draggTaskEnd($event), stopAutoScroll()"
-          :value="column.tasks"
-          :animation="150"
-          group="tasks"
-          :data-column-index="i"
-          class="grow pb-3 dragArea list-group"
-        >
-          <template #item="{ element }">
-            <!-- TaskCard O'zida -->
-            <div
-              class="bg-white dark:bg-[#1e1e1e] shadow-md rounded-lg p-3 border dark:border-[#48484a] transition-all hover:shadow-lg mt-3 cursor-move"
-            >
-              <h3 class="text-sm font-bold text-gray-800 dark:text-gray-200">
-                {{ element.name }}
-              </h3>
-              <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                📞 {{ element.phone }}
-              </p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">
-                {{ element.text || "No description" }}
-              </p>
-              <p class="text-[10px] text-gray-400 mt-2">
-                Last change:
-                {{ new Date(element.last_status_changed).toLocaleString() }}
-              </p>
-            </div>
-          </template>
-
-          <!-- Agar ustun bo'sh bo'lsa -->
-          <template #footer>
-            <div
-              v-if="!column.tasks.length"
-              class="text-center transition-all w-full grow order-5 border-2 rounded flex items-center justify-center text-gray-500 text-sm italic mt-3 dark:border-[#48484a]"
-            >
-              No tasks available
-            </div>
-          </template>
-        </draggable>
+        <div class="card-header">
+          <span class="patient-name">{{ item.name }}</span>
+          <span class="patient-phone">{{ item.phone }}</span>
+        </div>
+        <div class="card-body">
+          <div class="doctor-name">{{ item.doctor_name }}</div>
+          <div class="booking-date">{{ formatDate(item.date) }}</div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
-import draggable from "vuedraggable";
-import { ref, computed } from "vue";
-import { useDragScroll } from "@/composables/useDragScroll";
-import { useAutoScroll } from "@/composables/useAutoScroll";
-
-/* Mock API ma'lumotlari */
-const tasks = ref([
-  {
-    id: 48,
-    name: "Аоари",
-    phone: "+998901234567",
-    text: "Варик",
-    status: "not_reached_1",
-    last_status_changed: "2025-09-08T16:43:58.044910+05:00",
+<script>
+export default {
+  name: 'Goal',
+  data() {
+    return {
+      items: [],
+      draggedItem: null,
+      columns: [
+        { id: 1, title: 'Yangilar', apiStatus: 'Kutilmoqda' },
+        { id: 2, title: 'Bogʻlanib boʻlmadi', apiStatus: 'Bekor qilindi' },
+        { id: 3, title: 'Aloqaga chiqdi', apiStatus: 'Aloqaga chiqdi' },
+        { id: 4, title: 'Qabulga yozildi', apiStatus: 'Keldi' },
+        { id: 5, title: 'Keyinroq qoʻngʻiroq', apiStatus: 'Keyinroq qoʻngʻiroq' },
+      ],
+      csrfToken: 'qiXtHL1ARCFCmnMSqP6HW2dKD3M8EfoNGmYRCPDccCUSOvvaRJ37rLYkWwatA1do',
+    };
   },
-  {
-    id: 47,
-    name: "Нурмухаммад",
-    phone: "+998915177817",
-    text: "Катталаштирмокчи",
-    status: "new",
-    last_status_changed: "2025-09-08T17:26:11.369253+05:00",
+  created() {
+    this.fetchBookings();
   },
-  {
-    id: 46,
-    name: "Bobur",
-    phone: "+998911234567",
-    text: "kattalashtirish uchun",
-    status: "contacted",
-    last_status_changed: "2025-09-08T21:11:16.658183+05:00",
-  },
-  {
-    id: 45,
-    name: "test",
-    phone: "+998911234567",
-    text: "test",
-    status: "new",
-    last_status_changed: "2025-09-08T21:11:12.700346+05:00",
-  },
-  {
-    id: 44,
-    name: "Bobur Gulomov",
-    phone: "+998911234567",
-    text: "",
-    status: "appt_set",
-    last_status_changed: "2025-09-08T16:45:03.682768+05:00",
-  },
-  {
-    id: 40,
-    name: "yana boshqa kontakt",
-    phone: "998911234567",
-    text: "warfaewrfawe",
-    status: "call_later",
-    last_status_changed: "2025-09-08T16:29:01.013027+05:00",
-  },
-]);
-
-/* Statuslar bo'yicha ustunlar */
-const columns = ref([
-  { title: "new", tasks: tasks.value.filter(t => t.status === "new") },
-  { title: "contacted", tasks: tasks.value.filter(t => t.status === "contacted") },
-  { title: "call_later", tasks: tasks.value.filter(t => t.status === "call_later") },
-  { title: "not_reached_1", tasks: tasks.value.filter(t => t.status === "not_reached_1") },
-  { title: "appt_set", tasks: tasks.value.filter(t => t.status === "appt_set") },
-]);
-
-/* Scroll composables */
-const { container, startDragging } = useDragScroll();
-const { startAutoScroll, stopAutoScroll } = useAutoScroll(container);
-
-/* Dragging uchun vaqtinchalik qiymatlar */
-let taskId = ref<null | number>(null);
-let orderId = ref<null | number>(null);
-
-/* Drag tugagandan keyingi logika */
-function draggTaskEnd(evt: any) {
-  if (evt.to) {
-    const destinationIndex = evt.to.getAttribute("data-column-index");
-    if (destinationIndex !== null) {
-      const destinationColumn = columns.value[destinationIndex];
-      console.log("Task moved to column:", destinationColumn.title);
-      console.log("Task id:", taskId.value);
-
-      let body: { status?: string; order?: number } = {};
-      if (destinationColumn.title) {
-        body.status = destinationColumn.title;
+  methods: {
+    async fetchBookings() {
+      try {
+        const response = await fetch('https://web.dad-urolog.uz/api/dashboard/bookings/');
+        const data = await response.json();
+        this.items = data.data;
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
       }
-      if (orderId.value !== null) {
-        body.order = orderId.value;
+    },
+    getItemsByColumn(apiStatus) {
+      return this.items.filter(item => item.status === apiStatus);
+    },
+    onDragStart(event, item) {
+      this.draggedItem = item;
+      event.dataTransfer.setData('text/plain', item.id);
+      event.target.classList.add('dragging');
+    },
+    onDragEnd(event) {
+      event.target.classList.remove('dragging');
+      document.querySelectorAll('.kanban-column').forEach(col => {
+        col.classList.remove('drag-over');
+      });
+    },
+    onDragOver(event, columnId) {
+      event.dataTransfer.dropEffect = 'move';
+      event.currentTarget.classList.add('drag-over');
+    },
+    onDragLeave(event) {
+      event.currentTarget.classList.remove('drag-over');
+    },
+    async onDrop(event, columnId) {
+      event.currentTarget.classList.remove('drag-over');
+      if (this.draggedItem) {
+        const column = this.columns.find(col => col.id === columnId);
+        if (column) {
+          await this.updateItemStatus(this.draggedItem.id, column.apiStatus);
+        }
       }
-      console.log("Updated data for API:", body);
-    }
-  }
-}
-
-/* Drag jarayonidagi qiymatlarni olish */
-function draggTask(evt: any) {
-  if (evt?.added?.element?.id) {
-    taskId.value = evt.added.element.id;
-    orderId.value = evt.added.newIndex + 1;
-  }
-  if (evt?.moved?.element?.id) {
-    taskId.value = evt.moved.element.id;
-    orderId.value = evt.moved.newIndex + 1;
-  }
-}
+    },
+    async updateItemStatus(itemId, newStatus) {
+      try {
+        const response = await fetch(`https://web.dad-urolog.uz/api/dashboard/bookings/${itemId}/`, {
+          method: 'PATCH',
+          headers: {
+            'accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRFTOKEN': this.csrfToken,
+          },
+          body: JSON.stringify({
+            status: newStatus,
+          }),
+        });
+        if (response.ok) {
+          // PATCH muvaffaqiyatli bo'lsa, ma'lumotlarni qayta yuklaymiz
+          await this.fetchBookings();
+        } else {
+          const errorData = await response.json();
+          console.error('Failed to update status:', errorData);
+        }
+      } catch (error) {
+        console.error('Error updating item status:', error);
+      }
+    },
+    formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleString('uz-UZ', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    },
+  },
+};
 </script>
 
 <style scoped>
-.column-width {
-  width: 100%;
-  min-width: 310px;
+/* Style qismi o'zgarishsiz */
+.kanban-container {
   display: flex;
-  flex-direction: column;
-  user-select: none;
+  gap: 20px;
+  padding: 20px;
+  overflow-x: auto;
 }
-
-.dragArea {
-  flex-grow: 1;
+.kanban-column {
+  flex: 1;
+  min-width: 280px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.3s ease;
+}
+.kanban-column.drag-over {
+  background: #e8f4f8;
+  border: 2px dashed #007bff;
+}
+.kanban-column h3 {
+  margin-top: 0;
+  color: #343a40;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 8px;
+}
+.kanban-card {
+  background: white;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  cursor: grab;
+  transition: all 0.2s ease;
+  border-left: 4px solid #007bff;
+}
+.kanban-card.dragging {
+  opacity: 0.8;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.card-header {
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
-
-.dragArea .list-group {
-  flex-grow: 1;
+.patient-name {
+  font-weight: 600;
+  color: #212529;
 }
-
-.ghost-card {
-  opacity: 0.5;
-  background: #f7fafc;
-  border: 1px solid #4299e1;
+.patient-phone {
+  color: #6c757d;
+  font-size: 14px;
 }
-
-.dragArea .list-group > div {
-  flex-shrink: 0;
+.doctor-name {
+  color: #495057;
+  font-size: 14px;
+  margin-bottom: 4px;
 }
-
-.text-center {
-  flex-grow: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.booking-date {
+  color: #6c757d;
+  font-size: 13px;
 }
 </style>
