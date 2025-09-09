@@ -1,174 +1,178 @@
 <template>
-    <div class="dashboard-container">
-        <!-- HEADER -->
-        <div class="header">
-            <h1>Tibbiy Dashboard</h1>
-            <div class="time-filter">
-                <button :class="['filter-btn', { active: activeFilter === 'daily' }]" @click="setFilter('daily')">
-                    Kunlik
-                </button>
-                <button :class="['filter-btn', { active: activeFilter === 'weekly' }]" @click="setFilter('weekly')">
-                    Haftalik
-                </button>
-                <button :class="['filter-btn', { active: activeFilter === 'monthly' }]" @click="setFilter('monthly')">
-                    Oylik
-                </button>
-            </div>
-            <div class="user-info">
-                <span>Xush kelibsiz, Dr. {{ topDoctor?.name_uz?.split(' ')[0] || 'Smith' }}</span>
-                <div class="avatar">{{ getInitials(topDoctor?.name_uz) }}</div>
-            </div>
-        </div>
-
-        <!-- LOADING STATE -->
-        <div v-if="loading" class="loading">
+    <div class="medical-dashboard">
+        <!-- Loading State -->
+        <div v-if="loading" class="loading-container">
             <div class="spinner"></div>
-            <p>Dashboard ma'lumotlari yuklanmoqda...</p>
+            <p>Ma'lumotlar yuklanmoqda...</p>
         </div>
 
-        <!-- MAIN CONTENT -->
-        <div v-else>
-            <!-- STATS GRID -->
+        <!-- Dashboard Content -->
+        <div v-else class="dashboard-content">
+            <!-- Header -->
+            <div class="dashboard-header">
+                <h1>Tibbiy Markaz Dashboard</h1>
+                <div class="date-info">
+                    <span>{{ currentDate }}</span>
+                </div>
+            </div>
+
+            <!-- Main Stats Cards -->
             <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <h3>Jami Bemorlar</h3>
-                        <div class="stat-icon patients"><i class="fas fa-user-injured"></i></div>
+                <div class="stat-card primary">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                        </svg>
                     </div>
-                    <div class="stat-value">{{ getFilteredStats('patients') }}</div>
-                    <div class="stat-desc">Faol bemorlar</div>
+                    <div class="stat-info">
+                        <h3>{{ dashboardData?.general_stats?.total_doctors || 0 }}</h3>
+                        <p>Jami shifokorlar</p>
+                    </div>
                 </div>
 
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <h3>{{ activeFilter === 'daily' ? 'Bugungi' : activeFilter === 'weekly' ? 'Bu hafta' : 'Bu oy'
-                        }} Qabullar</h3>
-                        <div class="stat-icon success"><i class="fas fa-calendar-check"></i></div>
+                <div class="stat-card success">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 9.5V12L21 14.5V12.5L19 11.5L21 9ZM3 9L9 7V9L5 11.5V12.5L3 14.5V9Z" />
+                        </svg>
                     </div>
-                    <div class="stat-value">{{ getFilteredStats('appointments') }}</div>
-                    <div class="stat-desc">{{ getFilteredStats('completed') }} yakunlangan</div>
+                    <div class="stat-info">
+                        <h3>{{ dashboardData?.general_stats?.total_patients || 0 }}</h3>
+                        <p>Jami bemorlar</p>
+                    </div>
                 </div>
 
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <h3>Yangi Mijozlar</h3>
-                        <div class="stat-icon warning"><i class="fas fa-user-plus"></i></div>
+                <div class="stat-card warning">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V8H19V19ZM7 10H9V16H7V10ZM11 10H13V16H11V10ZM15 10H17V16H15V10Z" />
+                        </svg>
                     </div>
-                    <div class="stat-value">{{ getFilteredStats('leads') }}</div>
-                    <div class="stat-desc">{{ activeFilter === 'daily' ? 'Bugungi' : activeFilter === 'weekly' ?
-                        'Buhafta' : 'Bu oy' }} yangi mijozlar</div>
+                    <div class="stat-info">
+                        <h3>{{ dashboardData?.general_stats?.today_appointments || 0 }}</h3>
+                        <p>Bugungi qabullar</p>
+                    </div>
                 </div>
 
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <h3>Davomat Foizi</h3>
-                        <div class="stat-icon danger"><i class="fas fa-chart-line"></i></div>
+                <div class="stat-card info">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" />
+                        </svg>
                     </div>
-                    <div class="stat-value">{{ apiData?.performance_metrics?.attendance_rate?.toFixed(1) || 0 }}%</div>
-                    <div class="stat-desc">{{ getAttendanceStatus(apiData?.performance_metrics?.attendance_rate) }}
+                    <div class="stat-info">
+                        <h3>{{ dashboardData?.general_stats?.total_leads || 0 }}</h3>
+                        <p>Yangi murojatlar</p>
                     </div>
                 </div>
             </div>
 
-            <!-- CHARTS -->
-            <div class="charts-container">
-                <div class="chart-card">
-                    <h3>Kunlik Qabullar Tendensiyasi</h3>
-                    <VChart ref="trendsChart" class="chart" :option="dailyTrendsOption" v-if="isMounted && apiData" />
+            <!-- Charts Section -->
+            <div class="charts-section">
+                <!-- Booking Trends Chart -->
+                <div class="chart-container">
+                    <h3>Haftalik Qabul Tendensiyasi</h3>
+                    <div class="chart-wrapper">
+                        <svg ref="weeklyChart" class="chart-svg"></svg>
+                    </div>
                 </div>
 
-                <div class="chart-card">
-                    <h3>Qabullar Holati</h3>
-                    <VChart ref="statusChart" class="chart" :option="bookingStatusOption"
-                        v-if="isMounted && apiData && apiData.bookings_monthly" />
+                <!-- Daily Bookings Chart -->
+                <div class="chart-container">
+                    <h3>Kunlik Qabullar</h3>
+                    <div class="chart-wrapper">
+                        <svg ref="dailyChart" class="chart-svg"></svg>
+                    </div>
                 </div>
             </div>
 
-            <!-- DOCTORS PERFORMANCE -->
+            <!-- Performance Metrics -->
+            <div class="metrics-section">
+                <div class="metric-card">
+                    <h4>Davomat Ko'rsatkichi</h4>
+                    <div class="metric-value success">
+                        {{ dashboardData?.performance_metrics?.attendance_rate?.toFixed(1) || 0 }}%
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <h4>Bekor Qilish Ko'rsatkichi</h4>
+                    <div class="metric-value warning">
+                        {{ dashboardData?.performance_metrics?.cancellation_rate?.toFixed(1) || 0 }}%
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <h4>Oylik O'sish</h4>
+                    <div class="metric-value"
+                        :class="dashboardData?.performance_metrics?.monthly_growth?.bookings > 0 ? 'success' : 'danger'">
+                        {{ dashboardData?.performance_metrics?.monthly_growth?.bookings?.toFixed(1) || 0 }}%
+                    </div>
+                </div>
+            </div>
+
+            <!-- Doctors Performance -->
             <div class="doctors-section">
-                <h2 class="section-title">👨‍⚕️ Shifokorlar — To-Do</h2>
-
-                <div class="doctors-todo">
-                    <!-- LEFT: doctors list -->
-                    <aside class="doctors-sidebar">
-                        <input v-model="doctorSearch" class="doc-search" placeholder="Shifokorni qidirish..." />
-
-                        <div class="doc-list">
-                            <div v-for="doc in filteredDoctors" :key="doc.id"
-                                :class="['doc-item', { active: selectedDoctorId === doc.id }]"
-                                @click="selectDoctor(doc.id)">
-                                <div class="avatar-small">
-                                    <img v-if="doc.image" :src="doc.image" alt="avatar" />
-                                    <div v-else class="avatar-letters">{{ getInitials(doc.name_uz || doc.name) }}</div>
-                                </div>
-
-                                <div class="doc-info">
-                                    <div class="doc-name">{{ doc.name_uz || doc.name }}</div>
-                                    <div class="doc-job">{{ doc.job_uz || doc.job || '—' }}</div>
-                                </div>
-
-                                <div class="doc-actions">
-                                    <span class="chev">›</span>
-                                </div>
+                <h3>Shifokorlar Faoliyati</h3>
+                <div class="doctors-grid">
+                    <div v-for="doctor in dashboardData?.doctors_performance" :key="doctor.id" class="doctor-card">
+                        <div class="doctor-header">
+                            <div class="doctor-avatar">
+                                <img v-if="doctorImages[doctor.id]" :src="doctorImages[doctor.id]" :alt="doctor.name_uz"
+                                    class="doctor-img" />
+                                <span v-else class="doctor-initials">{{ getInitials(doctor.name_uz) }}</span>
                             </div>
-
-                            <div v-if="!filteredDoctors.length" class="no-docs">Shifokor topilmadi</div>
-                        </div>
-                    </aside>
-
-                    <!-- RIGHT: selected doctor detail -->
-                    <section class="doctor-detail">
-                        <div v-if="loadingDoctorData" class="loading-small">
-                            <div class="spinner-small"></div>
-                            <p>Ma'lumot yuklanmoqda...</p>
-                        </div>
-
-                        <div v-else-if="doctorSpecificData" class="detail-card">
-                            <div class="detail-top">
-                                <div class="avatar-lg">
-                                    <img v-if="doctorSpecificData.image" :src="doctorSpecificData.image" alt="avatar" />
-                                    <div v-else class="avatar-letters-lg">{{ getInitials(doctorSpecificData.name_uz ||
-                                        doctorSpecificData.name) }}</div>
-                                </div>
-
-                                <div class="meta">
-                                    <h3>{{ doctorSpecificData.name_uz || doctorSpecificData.name }}</h3>
-                                    <p class="job">{{ doctorSpecificData.job_uz || doctorSpecificData.job }}</p>
-                                    <p class="clinic">{{ doctorSpecificData.doctor_clinic ||
-                                        doctorSpecificData.doctor_address || '—' }}</p>
-                                </div>
-                            </div>
-
-                            <div class="kpis">
-                                <div class="kpi">
-                                    <div class="kpi-value">{{ doctorSpecificData.patients || 0 }}</div>
-                                    <div class="kpi-label">Bemorlar</div>
-                                </div>
-                                <div class="kpi">
-                                    <div class="kpi-value">{{ doctorSpecificData.experience_years || '—' }}</div>
-                                    <div class="kpi-label">Yil tajriba</div>
-                                </div>
-                                <div class="kpi">
-                                    <div class="kpi-value">{{ (doctorSpecificData.certificates?.length) ||
-                                        (doctorSpecificData.certification ? 1 : 0) }}</div>
-                                    <div class="kpi-label">Sertifikatlar</div>
-                                </div>
-                            </div>
-
-                            <div class="bio" v-if="doctorSpecificData.biography_uz"
-                                v-html="doctorSpecificData.biography_uz"></div>
-
-                            <div class="socials" v-if="doctorSpecificData.social_media?.length">
-                                <h4>Ijtimoiy tarmoqlar</h4>
-                                <div class="social-links">
-                                    <a v-for="s in doctorSpecificData.social_media" :key="s.id" :href="s.link"
-                                        target="_blank">{{ s.name }}</a>
-                                </div>
+                            <div class="doctor-info">
+                                <h4><nuxt-link :to="`/${doctor.id}`">{{ doctor.name_uz }}</nuxt-link></h4>
+                                <p>{{ doctor.job_uz }}</p>
+                                <span class="experience">{{ doctor.experience_years }} yil tajriba</span>
                             </div>
                         </div>
+                        <div class="doctor-stats">
+                            <div class="stat-item">
+                                <span>Jami qabullar</span>
+                                <strong>{{ doctor.total_bookings }}</strong>
+                            </div>
+                            <div class="stat-item">
+                                <span>Bemorlar</span>
+                                <strong>{{ doctor.patients_count }}</strong>
+                            </div>
+                            <div class="stat-item">
+                                <span>Bu hafta</span>
+                                <strong>{{ doctor.this_week_bookings }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                        <div v-else class="no-docs">Tanlangan shifokor ma'lumotlari mavjud emas</div>
-                    </section>
+            <!-- Popular Times -->
+            <div class="times-section">
+                <h3>Mashhur Qabul Vaqtlari</h3>
+                <div class="times-chart">
+                    <div v-for="time in dashboardData?.popular_booking_times" :key="time.hour" class="time-bar">
+                        <div class="time-label">{{ time.hour }}:00</div>
+                        <div class="bar-container">
+                            <div class="bar" :style="{ width: (time.count / getMaxBookings() * 100) + '%' }"></div>
+                            <span class="count">{{ time.count }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leads Analytics -->
+            <div class="leads-section">
+                <h3>Murojatlar Tahlili</h3>
+                <div class="leads-grid">
+                    <div v-for="lead in dashboardData?.leads_analytics?.status_breakdown" :key="lead.status"
+                        class="lead-card">
+                        <div class="lead-count">{{ lead.count }}</div>
+                        <div class="lead-status">{{ getStatusText(lead.status) }}</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -176,684 +180,256 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from "vue"
-import { useEventBus } from "@vueuse/core"
-import { use } from "echarts/core"
-import { CanvasRenderer } from "echarts/renderers"
-import { PieChart, LineChart, BarChart } from "echarts/charts"
-import {
-    TitleComponent,
-    TooltipComponent,
-    LegendComponent,
-    GridComponent
-} from "echarts/components"
-import VChart from "vue-echarts"
+import { ref, onMounted, nextTick } from 'vue'
 
-// ECharts setup
-use([
-    CanvasRenderer,
-    PieChart,
-    LineChart,
-    BarChart,
-    TitleComponent,
-    TooltipComponent,
-    LegendComponent,
-    GridComponent
-])
-
-// Reactive data
-const isMounted = ref(false)
 const loading = ref(true)
-const loadingDoctorData = ref(false)
-const activeFilter = ref("daily")
-const apiData = ref(null)
-const doctorSpecificData = ref(null)
-const selectedDoctorId = ref(1) // Default doctor ID
-const trendsChart = ref(null)
-const statusChart = ref(null)
+const dashboardData = ref(null)
+const doctorImages = ref({})
+const currentDate = ref(
+    new Date().toLocaleDateString('uz-UZ', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    })
+)
 
-// API URLs
-const API_URL = "https://web.dad-urolog.uz/api/dashboard/analytics/"
-// const DOCTOR_API_URL = "https://web.dad-urolog.uz/api/dashboard/doctor/"
-
-// Event bus for sidebar
-const bus = useEventBus("sidebar")
-bus.on(() => {
-    resizeCharts()
-})
-
-// Methods
-const resizeCharts = () => {
-    trendsChart.value?.chart?.resize()
-    statusChart.value?.chart?.resize()
-}
+const weeklyChart = ref(null)
+const dailyChart = ref(null)
 
 const fetchDashboardData = async () => {
     try {
-        loading.value = true
-        const response = await fetch(API_URL)
-        const result = await response.json()
-
-        if (result.success) {
-            apiData.value = result.data
-        } else {
-            console.error("API xatolik qaytardi:", result)
-            // Fallback data
-            apiData.value = getSampleData()
+        const response = await fetch('https://web.dad-urolog.uz/api/dashboard/api/dashboard/analytics/')
+        const data = await response.json()
+        if (data.success) {
+            dashboardData.value = data.data
+            // Shifokorlar rasmlarini olish
+            if (data.data.doctors_performance) {
+                await fetchDoctorImages(data.data.doctors_performance)
+            }
         }
     } catch (error) {
         console.error("Dashboard ma'lumotlarini olishda xatolik:", error)
-        apiData.value = getSampleData()
     } finally {
         loading.value = false
     }
 }
 
-const setFilter = (filter) => {
-    activeFilter.value = filter
+const fetchDoctorImages = async (doctors) => {
+    const images = {}
+    for (const doctor of doctors) {
+        try {
+            const response = await fetch(`https://web.dad-urolog.uz/api/dashboard/doctors/${doctor.id}/`)
+            const data = await response.json()
+            if (data.status && data.data && data.data.image) {
+                images[doctor.id] = data.data.image
+            }
+        } catch (error) {
+            console.error(`Shifokor ${doctor.id} rasmini olishda xatolik:`, error)
+        }
+    }
+    doctorImages.value = images
 }
 
-const getFilteredStats = (type) => {
-    if (!apiData.value) return 0
-
-    const stats = apiData.value.general_stats
-
-    switch (type) {
-        case 'patients':
-            if (activeFilter.value === 'daily') return stats.new_patients_this_month || 0
-            if (activeFilter.value === 'weekly') return Math.floor(stats.total_patients * 0.1) || 0
-            return stats.total_patients || 0
-
-        case 'appointments':
-            if (activeFilter.value === 'daily') return stats.today_appointments || 0
-            if (activeFilter.value === 'weekly') return (stats.today_appointments || 0) * 7
-            return apiData.value.bookings_monthly?.total_bookings || 0
-
-        case 'completed':
-            if (activeFilter.value === 'daily') return stats.today_completed || 0
-            if (activeFilter.value === 'weekly') return (stats.today_completed || 0) * 7
-            return apiData.value.bookings_monthly?.completed_bookings || 0
-
-        case 'leads':
-            if (activeFilter.value === 'daily') return stats.new_leads_today || 0
-            if (activeFilter.value === 'weekly') return (stats.new_leads_today || 0) * 7
-            return stats.total_leads || 0
-
-        default:
-            return 0
-    }
+const initializeCharts = () => {
+    nextTick(() => {
+        drawWeeklyChart()
+        drawDailyChart()
+    })
 }
 
-const getSampleData = () => ({
-    "general_stats": {
-        "total_doctors": 4,
-        "active_doctors": 4,
-        "total_patients": 709,
-        "active_patients": 709,
-        "new_patients_this_month": 709,
-        "today_appointments": 5,
-        "today_completed": 2,
-        "today_pending": 0,
-        "today_cancelled": 3,
-        "total_leads": 14,
-        "new_leads_today": 7,
-        "converted_leads": 0
-    },
-    "bookings_monthly": {
-        "total_bookings": 38,
-        "completed_bookings": 9,
-        "cancelled_bookings": 14,
-        "pending_bookings": 15
-    },
-    "doctors_performance": [
-        {
-            "id": 1,
-            "name_uz": "Kuziyev Azizjon Davlatovich",
-            "job_uz": "Urolog-androlog",
-            "experience_years": 10,
-            "total_bookings": 966,
-            "completed_bookings": 127,
-            "pending_bookings": 744,
-            "cancelled_bookings": 95,
-            "patients_count": 709,
-            "this_week_bookings": 10
-        },
-        {
-            "id": 2,
-            "name_uz": "Dautov Davron Davlatgeldiyevich",
-            "job_uz": "Urolog-Androlog",
-            "experience_years": 4,
-            "total_bookings": 0,
-            "completed_bookings": 0,
-            "pending_bookings": 0,
-            "cancelled_bookings": 0,
-            "patients_count": 0,
-            "this_week_bookings": 0
-        }
-    ],
-    "daily_bookings": [
-        { "date": "2025-09-08", "day_name": "Dushanba", "total": 5, "completed": 2, "pending": 0, "cancelled": 3 },
-        { "date": "2025-09-07", "day_name": "Yakshanba", "total": 1, "completed": 0, "pending": 1, "cancelled": 0 },
-        { "date": "2025-09-06", "day_name": "Shanba", "total": 11, "completed": 5, "pending": 1, "cancelled": 5 },
-        { "date": "2025-09-05", "day_name": "Juma", "total": 2, "completed": 0, "pending": 1, "cancelled": 1 },
-        { "date": "2025-09-04", "day_name": "Payshanba", "total": 3, "completed": 0, "pending": 3, "cancelled": 0 },
-        { "date": "2025-09-03", "day_name": "Chorshanba", "total": 2, "completed": 0, "pending": 0, "cancelled": 2 },
-        { "date": "2025-09-02", "day_name": "Seshanba", "total": 5, "completed": 2, "pending": 0, "cancelled": 3 }
-    ],
-    "popular_booking_times": [
-        { "hour": 10, "count": 10 },
-        { "hour": 9, "count": 6 },
-        { "hour": 14, "count": 5 }
-    ],
-    "leads_analytics": {
-        "conversion_funnel": {
-            "new_leads": 10,
-            "contacted": 2,
-            "qualified": 0,
-            "appointment_set": 1,
-            "converted": 0
-        }
-    },
-    "performance_metrics": {
-        "attendance_rate": 23.68,
-        "cancellation_rate": 36.84
+const drawWeeklyChart = () => {
+    const svg = weeklyChart.value
+    if (!svg || !dashboardData.value?.weekly_trends) return
+
+    const data = dashboardData.value.weekly_trends
+    if (data.length === 0) return
+
+    const margin = { top: 20, right: 80, bottom: 40, left: 50 }
+    const width = 500 - margin.left - margin.right
+    const height = 300 - margin.top - margin.bottom
+
+    svg.innerHTML = ''
+    svg.setAttribute('width', width + margin.left + margin.right)
+    svg.setAttribute('height', height + margin.top + margin.bottom)
+
+    const maxValue = Math.max(...data.map(d => Math.max(d.total, d.completed, d.cancelled)))
+    const xStep = width / (data.length - 1)
+
+    // Grid lines
+    for (let i = 0; i <= 5; i++) {
+        const y = margin.top + (height / 5) * i
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+        line.setAttribute('x1', margin.left)
+        line.setAttribute('y1', y)
+        line.setAttribute('x2', width + margin.left)
+        line.setAttribute('y2', y)
+        line.setAttribute('stroke', '#e5e7eb')
+        line.setAttribute('stroke-width', '1')
+        svg.appendChild(line)
     }
-})
+
+    // Draw lines
+    const drawLine = (values, color, label) => {
+        const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline')
+        const points = values.map((value, index) => {
+            const x = margin.left + xStep * index
+            const y = margin.top + height - (value / maxValue) * height
+            return `${x},${y}`
+        }).join(' ')
+
+        polyline.setAttribute('points', points)
+        polyline.setAttribute('fill', 'none')
+        polyline.setAttribute('stroke', color)
+        polyline.setAttribute('stroke-width', '3')
+        svg.appendChild(polyline)
+
+        // Add circles for data points
+        values.forEach((value, index) => {
+            const x = margin.left + xStep * index
+            const y = margin.top + height - (value / maxValue) * height
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+            circle.setAttribute('cx', x)
+            circle.setAttribute('cy', y)
+            circle.setAttribute('r', '4')
+            circle.setAttribute('fill', color)
+            svg.appendChild(circle)
+        })
+    }
+
+    drawLine(data.map(d => d.total), '#3b82f6', 'Jami')
+    drawLine(data.map(d => d.completed), '#10b981', 'Yakunlangan')
+    drawLine(data.map(d => d.cancelled), '#ef4444', 'Bekor qilingan')
+
+    // Labels
+    data.forEach((item, index) => {
+        const x = margin.left + xStep * index
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+        text.setAttribute('x', x)
+        text.setAttribute('y', height + margin.top + 20)
+        text.setAttribute('text-anchor', 'middle')
+        text.setAttribute('font-size', '12')
+        text.setAttribute('fill', '#374151')
+        text.textContent = item.week.split(' - ')[0].slice(5)
+        svg.appendChild(text)
+    })
+
+    // Legend
+    const legendData = [
+        { color: '#3b82f6', label: 'Jami' },
+        { color: '#10b981', label: 'Yakunlangan' },
+        { color: '#ef4444', label: 'Bekor qilingan' }
+    ]
+
+    legendData.forEach((item, index) => {
+        const x = width + margin.left - 70
+        const y = margin.top + index * 20
+
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+        rect.setAttribute('x', x)
+        rect.setAttribute('y', y - 10)
+        rect.setAttribute('width', '12')
+        rect.setAttribute('height', '12')
+        rect.setAttribute('fill', item.color)
+        svg.appendChild(rect)
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+        text.setAttribute('x', x + 16)
+        text.setAttribute('y', y)
+        text.setAttribute('font-size', '12')
+        text.setAttribute('fill', '#374151')
+        text.textContent = item.label
+        svg.appendChild(text)
+    })
+}
+
+const drawDailyChart = () => {
+    const svg = dailyChart.value
+    if (!svg || !dashboardData.value?.daily_bookings) return
+
+    const data = dashboardData.value.daily_bookings
+    if (data.length === 0) return
+
+    const margin = { top: 20, right: 30, bottom: 40, left: 50 }
+    const width = 500 - margin.left - margin.right
+    const height = 300 - margin.top - margin.bottom
+
+    svg.innerHTML = ''
+    svg.setAttribute('width', width + margin.left + margin.right)
+    svg.setAttribute('height', height + margin.top + margin.bottom)
+
+    const maxValue = Math.max(...data.map(d => d.total))
+    const barWidth = (width / data.length) * 0.8
+    const barSpacing = (width / data.length) * 0.2
+
+    // Grid lines
+    for (let i = 0; i <= 5; i++) {
+        const y = margin.top + (height / 5) * i
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+        line.setAttribute('x1', margin.left)
+        line.setAttribute('y1', y)
+        line.setAttribute('x2', width + margin.left)
+        line.setAttribute('y2', y)
+        line.setAttribute('stroke', '#e5e7eb')
+        line.setAttribute('stroke-width', '1')
+        svg.appendChild(line)
+    }
+
+    // Draw bars
+    data.forEach((item, index) => {
+        const x = margin.left + (width / data.length) * index + barSpacing / 2
+        const barHeight = (item.total / maxValue) * height
+        const y = margin.top + height - barHeight
+
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+        rect.setAttribute('x', x)
+        rect.setAttribute('y', y)
+        rect.setAttribute('width', barWidth)
+        rect.setAttribute('height', barHeight)
+        rect.setAttribute('fill', '#3b82f6')
+        rect.setAttribute('rx', '4')
+        svg.appendChild(rect)
+
+        // Labels
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+        text.setAttribute('x', x + barWidth / 2)
+        text.setAttribute('y', height + margin.top + 20)
+        text.setAttribute('text-anchor', 'middle')
+        text.setAttribute('font-size', '11')
+        text.setAttribute('fill', '#374151')
+        text.textContent = new Date(item.date).toLocaleDateString('uz-UZ', {
+            day: '2-digit',
+            month: '2-digit'
+        })
+        svg.appendChild(text)
+    })
+}
 
 const getInitials = (name) => {
-    if (!name) return "DS"
-    return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    if (!name) return 'DR'
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 }
 
-const getAttendanceStatus = (rate) => {
-    if (!rate) return "Ma'lumot yo'q"
-    if (rate >= 80) return "A'lo"
-    if (rate >= 60) return "Yaxshi"
-    if (rate >= 40) return "Yaxshilanishi kerak"
-    return "Jiddiy"
+const getMaxBookings = () => {
+    const times = dashboardData.value?.popular_booking_times || []
+    return Math.max(...times.map(t => t.count), 1)
 }
 
-const formatHour = (hour) => {
-    return `${hour}:00`
-}
-
-const getBarWidth = (count, timeSlots) => {
-    if (!timeSlots || timeSlots.length === 0) return 0
-    const maxCount = Math.max(...timeSlots.map(t => t.count))
-    return maxCount > 0 ? (count / maxCount) * 100 : 0
-}
-
-// Computed properties
-const topDoctor = computed(() => {
-    if (!apiData.value?.doctors_performance) return null
-    return apiData.value.doctors_performance.find(d => d.total_bookings > 0) ||
-        apiData.value.doctors_performance[0]
-})
-
-const selectedDoctorData = computed(() => {
-    if (!apiData.value?.doctors_performance) return null
-    return apiData.value.doctors_performance.find(d => d.id === selectedDoctorId.value)
-})
-
-const dailyTrendsOption = computed(() => {
-    if (!apiData.value?.daily_bookings) return {}
-
-    const days = apiData.value.daily_bookings.map(d => d.day_name)
-    const totals = apiData.value.daily_bookings.map(d => d.total)
-    const completed = apiData.value.daily_bookings.map(d => d.completed)
-    const cancelled = apiData.value.daily_bookings.map(d => d.cancelled)
-
-    return {
-        tooltip: {
-            trigger: "axis",
-            formatter: function (params) {
-                let result = `<strong>${params[0].axisValue}</strong><br/>`
-                params.forEach(param => {
-                    result += `${param.seriesName}: ${param.value}<br/>`
-                })
-                return result
-            }
-        },
-        legend: {
-            data: ["Jami", "Yakunlangan", "Bekor qilingan"],
-            bottom: 10
-        },
-        grid: {
-            left: "3%",
-            right: "4%",
-            bottom: "15%",
-            top: "10%",
-            containLabel: true
-        },
-        xAxis: {
-            type: "category",
-            data: days,
-            axisLabel: {
-                rotate: 45,
-                fontSize: 12
-            }
-        },
-        yAxis: {
-            type: "value",
-            axisLabel: {
-                fontSize: 12
-            }
-        },
-        series: [
-            {
-                name: "Jami",
-                type: "line",
-                smooth: true,
-                data: totals,
-                lineStyle: { width: 4, color: "#4361ee" },
-                itemStyle: { color: "#4361ee", borderWidth: 2 },
-                symbol: 'circle',
-                symbolSize: 8
-            },
-            {
-                name: "Yakunlangan",
-                type: "line",
-                smooth: true,
-                data: completed,
-                lineStyle: { width: 4, color: "#06d6a0" },
-                itemStyle: { color: "#06d6a0", borderWidth: 2 },
-                symbol: 'circle',
-                symbolSize: 8
-            },
-            {
-                name: "Bekor qilingan",
-                type: "line",
-                smooth: true,
-                data: cancelled,
-                lineStyle: { width: 4, color: "#f72585" },
-                itemStyle: { color: "#f72585", borderWidth: 2 },
-                symbol: 'circle',
-                symbolSize: 8
-            }
-        ]
+const getStatusText = (status) => {
+    const statusMap = {
+        'new': 'Yangi',
+        'contacted': 'Aloqada',
+        'appt_set': 'Qabul belgilangan',
+        'call_later': "Keyinroq qo'ng'iroq"
     }
-})
-
-const bookingStatusOption = computed(() => {
-    if (!apiData.value?.bookings_monthly) return {}
-
-    const data = apiData.value.bookings_monthly
-    const total = data.total_bookings || 1 // Avoid division by zero
-
-    return {
-        tooltip: {
-            trigger: "item",
-            formatter: function (params) {
-                const percentage = ((params.value / total) * 100).toFixed(1)
-                return `${params.name}: ${params.value} (${percentage}%)`
-            }
-        },
-        legend: {
-            top: "5%",
-            left: "center",
-            textStyle: {
-                fontSize: 12
-            }
-        },
-        series: [{
-            name: "Qabullar Holati",
-            type: "pie",
-            radius: ["35%", "65%"],
-            center: ['50%', '55%'],
-            avoidLabelOverlap: false,
-            itemStyle: {
-                borderRadius: 8,
-                borderColor: "#fff",
-                borderWidth: 3
-            },
-            label: {
-                show: true,
-                position: "outside",
-                formatter: '{b}: {c}',
-                fontSize: 11,
-                fontWeight: 'bold'
-            },
-            emphasis: {
-                label: {
-                    show: true,
-                    fontSize: 14,
-                    fontWeight: "bold"
-                },
-                itemStyle: {
-                    shadowBlur: 10,
-                    shadowOffsetX: 0,
-                    shadowColor: 'rgba(0, 0, 0, 0.5)'
-                }
-            },
-            labelLine: {
-                show: true,
-                length: 15,
-                length2: 10
-            },
-            data: [
-                { value: data.completed_bookings || 0, name: "Yakunlangan" },
-                { value: data.pending_bookings || 0, name: "Kutilmoqda" },
-                { value: data.cancelled_bookings || 0, name: "Bekor qilingan" }
-            ],
-            color: ["#06d6a0", "#4cc9f0", "#f72585"]
-        }]
-    }
-})
-
-
-
-const DOCTOR_API_URL = "https://web.dad-urolog.uz/api/dashboard/doctors/"
-
-// 2) doctors ro'yxati va qidiruv
-const doctorsList = ref([])
-const doctorSearch = ref('')
-const filteredDoctors = computed(() => {
-    const q = doctorSearch.value.trim().toLowerCase()
-    if (!q) return doctorsList.value
-    return doctorsList.value.filter(d => ((d.name_uz || d.name || '').toLowerCase().includes(q)))
-})
-
-// 3) yangilangan fetchDoctorData — plural endpoint ishlatadi
-const fetchDoctorData = async (doctorId) => {
-    try {
-        loadingDoctorData.value = true
-        const response = await fetch(`${DOCTOR_API_URL}${doctorId}/`)
-        const result = await response.json()
-        if (result.status || result.success) {
-            doctorSpecificData.value = result.data
-        } else {
-            console.error("Shifokor ma'lumotlari xatolik:", result)
-            doctorSpecificData.value = null
-        }
-    } catch (error) {
-        console.error("Shifokor ma'lumotlarini olishda xatolik:", error)
-        doctorSpecificData.value = null
-    } finally {
-        loadingDoctorData.value = false
-    }
+    return statusMap[status] || status
 }
 
-// 4) doctors ro'yxatini olish
-const fetchDoctorsList = async () => {
-    try {
-        const response = await fetch(DOCTOR_API_URL)
-        const result = await response.json()
-        if (result.status || result.success) {
-            // ba'zan paginated bo'lishi mumkin: result.data.results
-            doctorsList.value = result.data?.results ?? result.data ?? []
-        } else {
-            console.error("Doctorlar ro'yxati xatolik:", result)
-            doctorsList.value = []
-        }
-    } catch (error) {
-        console.error("Doctorlar ro'yxatini olishda xatolik:", error)
-        doctorsList.value = []
-    }
-}
-
-// 5) selectDoctor — mavjud selectDoctor funksiyangizni shu tarzda ishlatishingiz mumkin
-const selectDoctor = async (doctorId) => {
-    selectedDoctorId.value = doctorId
-    await fetchDoctorData(doctorId)
-}
-
-// 6) onMounted — doctors ro'yxatini ham yuklab olamiz
 onMounted(async () => {
     await fetchDashboardData()
-    await fetchDoctorsList()
-    // default id mavjud bo'lsa uni yukla, aks holda ro'yxatdagi birinchisini yukla
-    const initialId = selectedDoctorId.value || (doctorsList.value[0]?.id ?? 1)
-    await fetchDoctorData(initialId)
-    isMounted.value = true
-})
-
-onMounted(async () => {
-    await fetchDoctorsList()
-    await selectDoctor(1) // default 1-chi doctor
-})
-
-// Lifecycle
-onMounted(async () => {
-    await fetchDoctorsList()
-    await selectDoctor(1) // default id=1
-})
-
-// Lifecycle
-onMounted(async () => {
-    await fetchDashboardData()
-    await fetchDoctorData(selectedDoctorId.value) // Load default doctor data
-    isMounted.value = true
-})
-
-// Watch for filter changes
-watch(activeFilter, () => {
-    // Trigger chart updates when filter changes
-    setTimeout(() => {
-        resizeCharts()
-    }, 100)
+    initializeCharts()
 })
 </script>
+
+
 <style scoped>
-.doctors-section {
-    margin-top: 28px;
-}
-
-.section-title {
-    font-size: 20px;
-    font-weight: 700;
-    margin-bottom: 12px;
-}
-
-.doctors-todo {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
-}
-
-.doctors-sidebar {
-    width: 320px;
-    background: #fff;
-    border-radius: 12px;
-    padding: 12px;
-    box-shadow: 0 6px 20px rgba(30, 40, 60, 0.06);
-}
-
-.doc-search {
-    width: 100%;
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 1px solid #eef2ff;
-    margin-bottom: 10px;
-}
-
-.doc-list {
-    max-height: 520px;
-    overflow-y: auto;
-}
-
-.doc-item {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    padding: 10px;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background .12s, transform .08s;
-}
-
-.doc-item:hover {
-    background: #f7fbff;
-    transform: translateY(-1px);
-}
-
-.doc-item.active {
-    background: #e8f0ff;
-    box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.02);
-    font-weight: 600;
-}
-
-.avatar-small {
-    width: 44px;
-    height: 44px;
-    border-radius: 8px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #f2f6ff;
-    font-weight: 700;
-    color: #2b4bd6;
-}
-
-.avatar-small img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.avatar-letters {
-    font-size: 14px;
-}
-
-.doc-info {
-    flex: 1;
-}
-
-.doc-name {
-    font-weight: 600;
-}
-
-.doc-job {
-    color: #667085;
-    font-size: 13px;
-    margin-top: 2px;
-}
-
-.doctor-detail {
-    flex: 1;
-    min-width: 0;
-}
-
-.detail-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 18px;
-    box-shadow: 0 8px 30px rgba(30, 40, 60, 0.05);
-}
-
-.detail-top {
-    display: flex;
-    gap: 18px;
-    align-items: center;
-}
-
-.avatar-lg {
-    width: 88px;
-    height: 88px;
-    border-radius: 12px;
-    overflow: hidden;
-    background: #f2f6ff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.avatar-lg img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.head-meta h3 {
-    margin: 0;
-    font-size: 18px;
-}
-
-.job {
-    color: #3b82f6;
-    font-weight: 600;
-    margin-top: 6px;
-}
-
-.clinic {
-    color: #667085;
-    margin-top: 6px;
-}
-
-.kpis {
-    display: flex;
-    gap: 12px;
-    margin-top: 14px;
-}
-
-.kpi {
-    background: #f8fbff;
-    border-radius: 10px;
-    padding: 12px;
-    min-width: 100px;
-    text-align: center;
-}
-
-.kpi-value {
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.kpi-label {
-    color: #6b7280;
-    font-size: 12px;
-}
-
-.bio {
-    margin-top: 14px;
-    color: #374151;
-    line-height: 1.5;
-    max-height: 260px;
-    overflow: auto;
-}
-
-.social-links {
-    margin-top: 12px;
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.social-links a {
-    padding: 6px 10px;
-    border-radius: 8px;
-    text-decoration: none;
-    background: #eef2ff;
-    color: #2b4bd6;
-    font-weight: 600;
-    font-size: 13px;
-}
-
-.no-docs {
-    padding: 16px;
-    color: #9ca3af;
-    text-align: center;
-}
-
-.loading-small {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    padding: 20px;
-}
-
-.spinner-small {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 4px solid #e6eefc;
-    border-top-color: #4f46e5;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
 </style>

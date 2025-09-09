@@ -2,6 +2,7 @@
   <div class="dashboard">
     <Sidebar />
     <NuxtPage />
+    <!-- <NuxtLayout /> -->
   </div>
 </template>
 
