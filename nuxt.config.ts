@@ -4,7 +4,7 @@ export default defineNuxtConfig({
   nitro: {
     preset: 'static' // agar Render, Vercel, Railway’ga qo‘yayotgan bo‘lsang
   },
-  vite: {
-    plugins: [require('vite-svg-loader')()],
-  },
+  // vite: {
+  //   plugins: [require('vite-svg-loader')()],
+  // },
 })
